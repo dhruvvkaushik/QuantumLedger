@@ -2,11 +2,15 @@ import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 
+
 const PriceReflector = () => {
   const [isEth, setIsEth] = useState(true);
   const [priceData, setPriceData] = useState([]);
   const [currentPrice, setCurrentPrice] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [gasPrice, setGasPrice] = useState(null);
+  const [transferAmount, setTransferAmount] = useState('');
+  const [estimatedGasFee, setEstimatedGasFee] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,6 +38,87 @@ const PriceReflector = () => {
 
     fetchData();
   }, [isEth]);
+
+  // Add new useEffect for gas price fetching
+  useEffect(() => {
+    const fetchGasPrice = async () => {
+      try {
+        // For ETH gas price
+        const ethResponse = await fetch(`https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=${import.meta.env.VITE_REACT_APP_ETHERSCAN_API_KEY}`);
+        // 
+        const ethData = await ethResponse.json();
+        
+        // For MATIC gas price
+        const maticResponse = await fetch(`https://api.polygonscan.com/api?module=gastracker&action=gasoracle&apikey=${import.meta.env.VITE_REACT_APP_POLYGONSCAN_API_KEY}`);
+        const maticData = await maticResponse.json();
+
+        setGasPrice({
+          eth: ethData.result.SafeGasPrice,
+          matic: maticData.result.SafeGasPrice
+        });
+      } catch (error) {
+        console.error('Error fetching gas prices:', error);
+      }
+    };
+
+    fetchGasPrice();
+    const interval = setInterval(fetchGasPrice, 30000); // Update every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  // Add gas fee calculation function
+  const calculateGasFee = (amount) => {
+    if (!gasPrice || !amount) return;
+
+    // Standard ERC20 transfer uses approximately 65,000 gas
+    const standardGas = 65000;
+    
+    const ethGasFeeUSD = (standardGas * gasPrice.eth * 10 ** -9) * currentPrice;
+    const maticGasFeeUSD = (standardGas * gasPrice.matic * 10 ** -9) * currentPrice;
+
+    setEstimatedGasFee({
+      eth: ethGasFeeUSD.toFixed(2),
+      matic: maticGasFeeUSD.toFixed(2)
+    });
+  };
+
+  // Add this after your existing JSX, before the closing div
+  const renderGasCalculator = () => (
+    <div className="mt-8 p-6 bg-gray-700 rounded-lg">
+      <h2 className="text-xl font-bold text-white mb-4">Gas Fee Calculator</h2>
+      <div className="flex flex-col space-y-4">
+        <div className="flex items-center space-x-4">
+          <input
+            type="number"
+            value={transferAmount}
+            onChange={(e) => {
+              setTransferAmount(e.target.value);
+              calculateGasFee(e.target.value);
+            }}
+            placeholder="Enter amount to transfer"
+            className="px-4 py-2 rounded-lg bg-gray-600 text-white border border-gray-500 focus:outline-none focus:border-purple-500"
+          />
+        </div>
+        
+        {estimatedGasFee && (
+          <div className="space-y-2">
+            <div className="flex justify-between text-gray-300">
+              <span>Estimated ETH Gas Fee:</span>
+              <span>${estimatedGasFee.eth}</span>
+            </div>
+            <div className="flex justify-between text-gray-300">
+              <span>Estimated MATIC Gas Fee:</span>
+              <span>${estimatedGasFee.matic}</span>
+            </div>
+            <div className="flex justify-between text-green-400 font-bold">
+              <span>Potential Savings:</span>
+              <span>${(estimatedGasFee.eth - estimatedGasFee.matic).toFixed(2)}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-gray-800 rounded-lg shadow-lg">
@@ -94,6 +179,8 @@ const PriceReflector = () => {
           </div>
         </>
       )}
+
+      {!loading && renderGasCalculator()}
     </div>
   );
 };

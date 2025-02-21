@@ -3,7 +3,7 @@ import { ExternalLink, Loader2 } from 'lucide-react';
 import { Web3Context } from '../context/Web3Context';
 
 export default function TransactionHistory() {
-  const { forwarder, account } = useContext(Web3Context);
+  const { forwarder, account, web3 } = useContext(Web3Context);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -12,7 +12,6 @@ export default function TransactionHistory() {
       if (forwarder && account) {
         try {
           const events = await forwarder.getPastEvents('TransactionForwarded', {
-            filter: { from: account },
             fromBlock: 0,
             toBlock: 'latest'
           });

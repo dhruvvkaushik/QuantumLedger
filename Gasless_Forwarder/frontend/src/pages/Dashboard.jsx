@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useContext, useEffect } from 'react';
 import { Web3Context } from '../context/Web3Context';
 import TestToken from '../contracts/TestToken.json';
@@ -30,7 +31,7 @@ const generateTransferReceipt = (transferData) => {
 export default function Dashboard() {
   const { web3, account, forwarder, loading: web3Loading } = useContext(Web3Context);
   const [formData, setFormData] = useState({
-    tokenAddress: '0xa4BDEc658Ceb16F9a5D657E2B37086018B6fa21e',
+    tokenAddress: '0xDf1A6fd7b3Dc1C92B515241c26d70243F89Fffd7',
     recipient: '',
     amount: '',
   });
