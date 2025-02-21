@@ -2,3 +2,13 @@
 .recharts-tooltip-cursor {
     fill: rgba(55, 65, 81, 0.5);
   }
+  /* Add these styles to your existing CSS */
+.shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.transition-colors {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}

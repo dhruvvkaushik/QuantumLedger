@@ -34,6 +34,13 @@ contract Forwarder is Ownable, ReentrancyGuard {
         bool success
     );
 
+    event TransferForwarded(
+        address indexed token,
+        address indexed from,
+        address indexed to,
+        uint256 amount
+    );
+
     constructor() Ownable(msg.sender) {}
 
     function getNonce(address from) public view returns (uint256) {
@@ -210,6 +217,40 @@ contract Forwarder is Ownable, ReentrancyGuard {
             );
         }
 
+        return true;
+    }
+
+    function forwardTransferWithPermit(
+        address token,
+        address from,
+        address to,
+        uint256 amount,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external nonReentrant returns (bool) {
+        require(msg.sender == to, "Only recipient can execute");
+        require(deadline >= block.timestamp, "Permit expired");
+
+        // Execute the permit
+        IERC20Permit(token).permit(
+            from,
+            address(this),
+            amount,
+            deadline,
+            v,
+            r,
+            s
+        );
+
+        // Transfer tokens
+        require(
+            IERC20(token).transferFrom(from, to, amount),
+            "Transfer failed"
+        );
+
+        emit TransferForwarded(token, from, to, amount);
         return true;
     }
 

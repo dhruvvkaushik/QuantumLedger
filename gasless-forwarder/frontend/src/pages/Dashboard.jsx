@@ -1,101 +1,58 @@
-import { useState, useContext, useEffect } from 'react';
+// filepath: /gasless-forwarder/gasless-forwarder/frontend/src/pages/Dashboard.jsx
+import { useState, useContext } from 'react';
 import { Web3Context } from '../context/Web3Context';
 import TestToken from '../contracts/TestToken.json';
-import { Loader, Download, Wallet } from 'lucide-react';
-import jsPDF from 'jspdf';
-
-// Add this new function before the Dashboard component
-const generateTransferReceipt = (transferData) => {
-  const pdf = new jsPDF();
-  const date = new Date().toLocaleString();
-
-  pdf.setFontSize(20);
-  pdf.text('Transfer Receipt', 105, 20, { align: 'center' });
-
-  pdf.setFontSize(12);
-  pdf.text([
-    `Date: ${date}`,
-    `Transaction Type: Gasless Token Transfer`,
-    `Token Address: ${transferData.tokenAddress}`,
-    `From: ${transferData.from}`,
-    `To: ${transferData.to}`,
-    `Amount: ${transferData.amount} TEST`,
-    `Network: ${window.ethereum.networkVersion}`,
-    `Deadline: ${new Date(transferData.deadline * 1000).toLocaleString()}`
-  ], 20, 40);
-
-  pdf.save('transfer-receipt.pdf');
-};
+import { Loader } from '../components/Loader';
 
 export default function Dashboard() {
   const { web3, account, forwarder, loading: web3Loading } = useContext(Web3Context);
   const [formData, setFormData] = useState({
-    tokenAddress: '0xa4BDEc658Ceb16F9a5D657E2B37086018B6fa21e',
+    tokenAddress: '',
     recipient: '',
     amount: '',
   });
   const [permitData, setPermitData] = useState(null);
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
-  const [tokenBalance, setTokenBalance] = useState('0');
-  const [accountBalance, setAccountBalance] = useState('0');
-  const [shortAccount, setShortAccount] = useState('');
 
-  const updateBalances = async () => {
-    if (!web3 || !formData.tokenAddress || !account) return;
-
+  const handleSignPermit = async () => {
     try {
+      setLoading(true);
+
+      const accounts = await window.ethereum.request({
+        method: 'eth_requestAccounts',
+      });
+
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No authorized accounts found');
+      }
+
       const tokenContract = new web3.eth.Contract(
         TestToken.abi,
         formData.tokenAddress
       );
 
       const balance = await tokenContract.methods.balanceOf(account).call();
-      const formattedBalance = web3.utils.fromWei(balance, 'ether');
-      setAccountBalance(formattedBalance);
+      const amount = web3.utils.toWei(formData.amount.toString(), 'ether');
 
-      const contractBalance = await tokenContract.methods.balanceOf(forwarder._address).call();
-      const formattedContractBalance = web3.utils.fromWei(contractBalance, 'ether');
-      setTokenBalance(formattedContractBalance);
-    } catch (error) {
-      console.error('Error fetching balances:', error);
-    }
-  };
+      if (BigInt(amount) > BigInt(balance)) {
+        throw new Error('Insufficient token balance');
+      }
 
-  useEffect(() => {
-    updateBalances();
-  }, [web3, account, formData.tokenAddress, forwarder]);
-
-  useEffect(() => {
-    if (account) {
-      setShortAccount(`${account.slice(0, 6)}...${account.slice(-4)}`);
-    }
-  }, [account]);
-
-  const handleSignPermit = async () => {
-    try {
-      setLoading(true);
-
-      const tokenContract = new web3.eth.Contract(
-        TestToken.abi,
-        formData.tokenAddress
-      );
-
-      const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+      const deadline = Math.floor(Date.now() / 1000) + 3600;
       const nonce = await tokenContract.methods.nonces(account).call();
       const chainId = await web3.eth.getChainId();
       const name = await tokenContract.methods.name().call();
-      const amount = web3.utils.toWei(formData.amount, 'ether');
+      const version = '1';
 
-      // Convert BigInt values to strings
-      const domainData = {
+      const domain = {
         name: name,
-        version: '1',
+        version: version,
         chainId: chainId.toString(),
         verifyingContract: formData.tokenAddress
       };
 
-      const message = {
+      const permit = {
         owner: account,
         spender: forwarder._address,
         value: amount.toString(),
@@ -120,39 +77,38 @@ export default function Dashboard() {
           ]
         },
         primaryType: 'Permit',
-        domain: domainData,
-        message: message
+        domain: domain,
+        message: permit
       };
 
-      // Use eth_signTypedData_v4 instead of personal.sign for proper EIP-712 signing
       const signature = await window.ethereum.request({
         method: 'eth_signTypedData_v4',
         params: [account, JSON.stringify(typedData)],
       });
 
-      // Split signature
       const r = signature.slice(0, 66);
       const s = '0x' + signature.slice(66, 130);
       const v = parseInt(signature.slice(130, 132), 16);
 
-      setPermitData({
+      const permitInfo = {
         tokenAddress: formData.tokenAddress,
         from: account,
         to: formData.recipient,
-        amount: amount.toString(),
+        amount: amount,
         deadline: deadline,
-        v,
-        r,
-        s
-      });
+        v: Number(v),
+        r: r,
+        s: s
+      };
 
+      setPermitData(permitInfo);
       setStatus({
         type: 'success',
-        message: 'Permit signed successfully!'
+        message: 'Permit signed! Share the permit data with the recipient.'
       });
 
     } catch (error) {
-      console.error(error);
+      console.error('Signing failed:', error);
       setStatus({
         type: 'error',
         message: error.message
@@ -170,38 +126,67 @@ export default function Dashboard() {
         throw new Error('No permit data available');
       }
 
-      const tx = await forwarder.methods
-        .forwardTransferWithPermit(
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      if (parseInt(permitData.deadline) < currentTimestamp) {
+        throw new Error('Permit has expired');
+      }
+
+      const tokenContract = new web3.eth.Contract(TestToken.abi, permitData.tokenAddress);
+      const balance = await tokenContract.methods.balanceOf(permitData.from).call();
+
+      const balanceBigInt = BigInt(balance);
+      const amountBigInt = BigInt(permitData.amount);
+
+      if (balanceBigInt < amountBigInt) {
+        throw new Error('Insufficient token balance');
+      }
+
+      const gasEstimate = await forwarder.methods
+        .forwardERC20TransferWithPermit(
           permitData.tokenAddress,
           permitData.from,
           permitData.to,
-          permitData.amount,
+          permitData.amount.toString(),
+          0,
           permitData.deadline,
           permitData.v,
           permitData.r,
           permitData.s
         )
-        .send({ from: account });
+        .estimateGas({ from: account });
+
+      const gasLimit = Number(gasEstimate) + Math.floor(Number(gasEstimate) * 0.2);
+
+      const tx = await forwarder.methods
+        .forwardERC20TransferWithPermit(
+          permitData.tokenAddress,
+          permitData.from,
+          permitData.to,
+          permitData.amount.toString(),
+          0,
+          permitData.deadline,
+          permitData.v,
+          permitData.r,
+          permitData.s
+        )
+        .send({
+          from: account,
+          gas: gasLimit
+        });
 
       setStatus({
         type: 'success',
-        message: 'Transfer executed successfully!'
-      });
-
-      // Add this line to update balances after successful transfer
-      await updateBalances();
-
-      // After successful transfer, generate receipt
-      generateTransferReceipt({
-        ...permitData,
-        timestamp: Date.now()
+        message: 'Transfer completed successfully!'
       });
 
     } catch (error) {
-      console.error(error);
+      console.error('Transfer execution failed:', error);
+      const errorMessage = error.message.includes('execution reverted')
+        ? error.message.split('execution reverted:')[1].trim()
+        : error.message;
       setStatus({
         type: 'error',
-        message: error.message
+        message: `Transfer failed: ${errorMessage}`
       });
     } finally {
       setLoading(false);
@@ -210,25 +195,10 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-black">
-      {/* Add header section */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <h2 className="text-2xl font-bold text-gray-900">Gasless Transfer Dashboard</h2>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center px-4 py-2 bg-gray-100 rounded-lg">
-                <Wallet className="h-5 w-5 text-gray-500 mr-2" />
-                <span className="text-sm font-medium text-gray-700">{shortAccount || 'Not Connected'}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h1 className="text-3xl font-bold mb-8 text-gray-900">Gasless Token Transfer with Permit</h1>
-
+          
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-700">Token Address</label>
@@ -238,15 +208,6 @@ export default function Dashboard() {
                 onChange={(e) => setFormData({ ...formData, tokenAddress: e.target.value })}
                 placeholder="0x..."
               />
-            </div>
-
-            <div className="flex justify-between items-center mt-2 text-sm text-gray-600">
-              <div>
-                Your Balance: {accountBalance} TEST
-              </div>
-              <div>
-                Contract Balance: {tokenBalance} TEST
-              </div>
             </div>
 
             <div>
@@ -296,25 +257,8 @@ export default function Dashboard() {
               </button>
             )}
 
-            {/* Modify the success message to include download button */}
-            {status.message && status.type === 'success' && (
-              <div className="p-4 rounded-lg bg-green-100 border border-green-200 flex justify-between items-center">
-                <span>{status.message}</span>
-                <button
-                  onClick={() => generateTransferReceipt(permitData)}
-                  className="flex items-center px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Receipt
-                </button>
-              </div>
-            )}
-
             {status.message && (
-              <div
-                className={`p-4 rounded-lg ${status.type === 'success' ? 'bg-green-100 border border-green-200' : 'bg-red-100 border border-red-200'
-                  }`}
-              >
+              <div className={`p-4 rounded-lg ${status.type === 'success' ? 'bg-green-100 border border-green-200' : 'bg-red-100 border border-red-200'}`}>
                 {status.message}
               </div>
             )}
