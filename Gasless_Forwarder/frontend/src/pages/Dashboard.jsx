@@ -31,7 +31,7 @@ const generateTransferReceipt = (transferData) => {
 export default function Dashboard() {
   const { web3, account, forwarder, loading: web3Loading } = useContext(Web3Context);
   const [formData, setFormData] = useState({
-    tokenAddress: '0xDf1A6fd7b3Dc1C92B515241c26d70243F89Fffd7',
+    tokenAddress: '0xd57dC05B81e7bA34904E97eCc809dE9b9803FC78',
     recipient: '',
     amount: '',
   });
