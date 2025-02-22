@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ethers } from 'ethers';
 
 const GasEstimator = () => {
@@ -30,7 +30,7 @@ const GasEstimator = () => {
     try {
       setLoading(true);
       setError('');
-      
+
       // Basic validation
       if (!ethers.utils.isAddress(tokenAddress)) {
         throw new Error('Invalid token address');
@@ -49,7 +49,7 @@ const GasEstimator = () => {
       const baseGas = ethers.utils.parseUnits('0.001', 'ether');
       const bridgeFee = ethers.utils.parseUnits('0.0005', 'ether');
       const securityFee = ethers.utils.parseUnits('0.0002', 'ether');
-      
+
       setEstimates({
         sourceGas: baseGas.add(tokenType === 'ERC721' ? ethers.utils.parseUnits('0.0003', 'ether') : 0),
         bridgeFee,
@@ -66,16 +66,17 @@ const GasEstimator = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-gray-50 rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Cross-Chain Gas Estimator</h2>
-      
+    <div className='justify-center align-middle min-h-screen my-auto'>
+    <div className="max-w-5xl  mx-auto p-6 bg-gray-900 text-white rounded-xl shadow-md ">
+      <h2 className="text-2xl font-bold text-white mb-6">Cross-Chain Gas Estimator</h2>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Token Standard</label>
+          <label className="block text-sm font-medium text-gray-400">Token Standard</label>
           <select
             value={tokenType}
             onChange={(e) => setTokenType(e.target.value)}
-            className="w-full p-2 border rounded-md"
+            className="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="ERC20">ERC20</option>
             <option value="ERC721">ERC721</option>
@@ -83,11 +84,11 @@ const GasEstimator = () => {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Source Chain</label>
+          <label className="block text-sm font-medium text-gray-400">Source Chain</label>
           <select
             value={sourceChain}
             onChange={(e) => setSourceChain(e.target.value)}
-            className="w-full p-2 border rounded-md"
+            className="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="sepolia">Sepolia</option>
             <option value="amoy">Amoy</option>
@@ -95,11 +96,11 @@ const GasEstimator = () => {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Destination Chain</label>
+          <label className="block text-sm font-medium text-gray-400">Destination Chain</label>
           <select
             value={destChain}
             onChange={(e) => setDestChain(e.target.value)}
-            className="w-full p-2 border rounded-md"
+            className="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="amoy">Amoy</option>
             <option value="sepolia">Sepolia</option>
@@ -107,37 +108,35 @@ const GasEstimator = () => {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Token Address
-          </label>
+          <label className="block text-sm font-medium text-gray-400">Token Address</label>
           <input
             type="text"
             value={tokenAddress}
             onChange={(e) => setTokenAddress(e.target.value)}
-            className="w-full p-2 border rounded-md"
+            className="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="0x..."
           />
         </div>
 
         {tokenType === 'ERC20' ? (
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Amount</label>
+            <label className="block text-sm font-medium text-gray-400">Amount</label>
             <input
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter amount"
             />
           </div>
         ) : (
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Token ID</label>
+            <label className="block text-sm font-medium text-gray-400">Token ID</label>
             <input
               type="number"
               value={tokenId}
               onChange={(e) => setTokenId(e.target.value)}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter token ID"
             />
           </div>
@@ -149,28 +148,28 @@ const GasEstimator = () => {
       <button
         onClick={estimateGasFees}
         disabled={loading}
-        className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:bg-gray-400"
+        className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:bg-gray-400"
       >
         {loading ? 'Calculating...' : 'Estimate Gas Fees'}
       </button>
 
       {estimates && (
-        <div className="mt-6 p-4 bg-white rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Estimated Fees</h3>
+        <div className="mt-6 p-4 bg-gray-800 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4 text-white">Estimated Fees</h3>
           <div className="space-y-2">
-            <div className="flex justify-between">
+            <div className="flex justify-between text-gray-300">
               <span>Source Chain Gas:</span>
               <span>{ethers.utils.formatEther(estimates.sourceGas)} ETH</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between text-gray-300">
               <span>Bridge Fee:</span>
               <span>{ethers.utils.formatEther(estimates.bridgeFee)} ETH</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between text-gray-300">
               <span>Destination Gas:</span>
               <span>{ethers.utils.formatEther(estimates.destinationGas)} MATIC</span>
             </div>
-            <div className="flex justify-between font-bold border-t pt-2">
+            <div className="flex justify-between font-bold border-t pt-2 text-gray-300">
               <span>Total Estimated Cost:</span>
               <span>{ethers.utils.formatEther(estimates.total)} ETH</span>
             </div>
@@ -181,6 +180,7 @@ const GasEstimator = () => {
       <div className="mt-4 text-sm text-gray-500">
         Note: Estimates are approximations. Actual fees may vary based on network conditions.
       </div>
+    </div>
     </div>
   );
 };

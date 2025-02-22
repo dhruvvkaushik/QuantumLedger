@@ -4,6 +4,8 @@ import { Web3Context } from '../context/Web3Context';
 import TestToken from '../contracts/TestToken.json';
 import { Loader, Download, Wallet } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { saveReceipt } from '../service/api';
+
 
 // Add this new function before the Dashboard component
 const generateTransferReceipt = (transferData) => {
@@ -183,6 +185,29 @@ export default function Dashboard() {
           permitData.s
         )
         .send({ from: account });
+
+      // Create receipt data
+    const receiptData = {
+      transactionType: 'Gasless Token Transfer',
+      tokenAddress: permitData.tokenAddress,
+      from: permitData.from,
+      to: permitData.to,
+      amount: web3.utils.fromWei(permitData.amount, 'ether'),
+      network: await web3.eth.getChainId(),
+      deadline: new Date(permitData.deadline * 1000).toISOString(),
+      status: 'completed',
+      transactionHash: tx.transactionHash,
+      timestamp: new Date().toISOString(),
+      gasUsed: tx.gasUsed,
+      permitData: {
+        v: permitData.v,
+        r: permitData.r,
+        s: permitData.s
+      }
+    };
+
+    // Save receipt to MongoDB
+    await saveReceipt(receiptData);
 
       setStatus({
         type: 'success',
