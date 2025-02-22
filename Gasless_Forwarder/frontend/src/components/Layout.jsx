@@ -10,7 +10,10 @@ import {
   HelpCircle,
   LineChart,
   Menu,
-  X
+  X,
+  Github,
+  Twitter,
+  Linkedin
 } from 'lucide-react';
 
 export default function Layout({ children }) {
@@ -108,6 +111,22 @@ export default function Layout({ children }) {
           {children}
         </div>
       </main>
+      <footer className="bg-white border-t">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+          <span className="text-md text-gray-600 text-center">&copy; 2025 Eno Bridge. All rights reserved.</span>
+          <div className="flex space-x-4">
+            <a href="https://github.com/your-profile" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900">
+              <Github className="w-5 h-5" />
+            </a>
+            <a href="https://twitter.com/your-profile" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900">
+              <Twitter className="w-5 h-5" />
+            </a>
+            <a href="https://linkedin.com/in/your-profile" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900">
+              <Linkedin className="w-5 h-5" />
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

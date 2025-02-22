@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 
-
 const PriceReflector = () => {
   const [isEth, setIsEth] = useState(true);
   const [priceData, setPriceData] = useState([]);
@@ -39,16 +38,12 @@ const PriceReflector = () => {
     fetchData();
   }, [isEth]);
 
-  // Add new useEffect for gas price fetching
   useEffect(() => {
     const fetchGasPrice = async () => {
       try {
-        // For ETH gas price
         const ethResponse = await fetch(`https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=${import.meta.env.VITE_REACT_APP_ETHERSCAN_API_KEY}`);
-        // 
         const ethData = await ethResponse.json();
         
-        // For MATIC gas price
         const maticResponse = await fetch(`https://api.polygonscan.com/api?module=gastracker&action=gasoracle&apikey=${import.meta.env.VITE_REACT_APP_POLYGONSCAN_API_KEY}`);
         const maticData = await maticResponse.json();
 
@@ -62,15 +57,13 @@ const PriceReflector = () => {
     };
 
     fetchGasPrice();
-    const interval = setInterval(fetchGasPrice, 30000); // Update every 30 seconds
+    const interval = setInterval(fetchGasPrice, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // Add gas fee calculation function
   const calculateGasFee = (amount) => {
     if (!gasPrice || !amount) return;
 
-    // Standard ERC20 transfer uses approximately 65,000 gas
     const standardGas = 65000;
     
     const ethGasFeeUSD = (standardGas * gasPrice.eth * 10 ** -9) * currentPrice;
@@ -82,9 +75,8 @@ const PriceReflector = () => {
     });
   };
 
-  // Add this after your existing JSX, before the closing div
   const renderGasCalculator = () => (
-    <div className="mt-8 p-6 bg-gray-700 rounded-lg">
+    <div className="mt-8 p-6 bg-gray-800 rounded-lg shadow-md">
       <h2 className="text-xl font-bold text-white mb-4">Gas Fee Calculator</h2>
       <div className="flex flex-col space-y-4">
         <div className="flex items-center space-x-4">
@@ -96,7 +88,7 @@ const PriceReflector = () => {
               calculateGasFee(e.target.value);
             }}
             placeholder="Enter amount to transfer"
-            className="px-4 py-2 rounded-lg bg-gray-600 text-white border border-gray-500 focus:outline-none focus:border-purple-500"
+            className="px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500"
           />
         </div>
         
@@ -121,7 +113,7 @@ const PriceReflector = () => {
   );
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-gray-800 rounded-lg shadow-lg">
+    <div className="max-w-4xl mx-auto p-6 bg-gray-900 rounded-lg shadow-lg">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-white">
           {isEth ? 'Ethereum (ETH)' : 'Polygon (MATIC)'} Price
