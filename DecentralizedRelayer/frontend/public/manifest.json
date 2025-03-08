@@ -1,6 +1,6 @@
 {
-    "name": "Eno Bridge",
-    "short_name": "Eno",
+    "name": "QuantumLedger",
+    "short_name": "Quant",
     "description": "Cross-chain token and NFT bridge for seamless asset transfers",
     "start_url": "/",
     "display": "standalone",

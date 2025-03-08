@@ -14,7 +14,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Navbar */}
       <nav className="sticky top-0 z-10 shadow-sm bg-white py-4 px-6 flex justify-between items-center">
-        <h1 className="text-2xl font-bold tracking-tight text-purple-600">Eno Bridge</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-purple-600">Quantum Ledger</h1>
         {account && (
           <div className="flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-lg border border-purple-100 text-sm font-medium">
             <Wallet className="w-4 h-4 text-purple-500" />
@@ -101,7 +101,7 @@ const Dashboard = () => {
               <div className="max-w-md mx-auto">
                 <Wallet className="w-12 h-12 text-purple-500 mx-auto mb-4" />
                 <p className="text-lg font-medium text-gray-900 mb-2">Connect Your Wallet</p>
-                <p className="text-gray-500">Connect your wallet to access Eno Bridge features and start managing your assets.</p>
+                <p className="text-gray-500">Connect your wallet to access Quantum Ledger features and start managing your assets.</p>
               </div>
             </div>
           )}
@@ -109,12 +109,12 @@ const Dashboard = () => {
       </main>
       <footer className="py-4 px-6 border-t border-gray-200 bg-white">
         <div className="max-w-6xl mx-auto flex items-center justify-center gap-2 text-sm text-gray-600">
-          <span>Made with ❤️ by Team Sangathan</span>
+          <span>Made with ❤️</span>
           <span className="px-2">•</span>
-          <span>Eno Bridge</span>
+          <span>Dhruv Kaushik</span>
           <span className="px-2">•</span>
           <a 
-            href="https://github.com/exploring-solver/iitkcyberhack" 
+            href="https://github.com/dhruvvkaushik/QuantumLedger" 
             target="_blank" 
             rel="noopener noreferrer"
             className="ml-2 p-1 hover:text-purple-600 transition-colors duration-200"
